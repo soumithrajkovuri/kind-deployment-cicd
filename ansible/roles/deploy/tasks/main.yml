@@ -1,0 +1,9 @@
+- name: Deploy Helm chart
+  community.kubernetes.helm:
+    name: myapp
+    chart_path: "{{ playbook_dir }}/../helm/myapp"
+    kubeconfig: ~/.kube/config
+    values:
+      image:
+        tag: "{{ image_tag }}"
+    state: present
