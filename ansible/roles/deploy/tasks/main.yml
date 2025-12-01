@@ -2,8 +2,11 @@
   community.kubernetes.helm:
     name: myapp
     chart_path: "{{ playbook_dir }}/../helm/myapp"
-    kubeconfig: ~/.kube/config
+    kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/config"
+    force: true
+    update_dependencies: true
     values:
       image:
+        repository: "localhost:5000/myapp"
         tag: "{{ image_tag }}"
     state: present

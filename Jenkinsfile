@@ -1,27 +1,47 @@
 pipeline {
     agent any
 
+    environment {
+        REGISTRY = "localhost:5000"
+        IMAGE_NAME = "myapp"
+        IMAGE_TAG = "v${BUILD_NUMBER}"
+        RELEASE_NAME = "myapp"
+        CHART_PATH = "helm/myapp"
+    }
+
     stages {
-
-        stage('Build') {
+        stage('Checkout') {
             steps {
-                sh 'docker build -t myapp:$BUILD_NUMBER app/'
+                git credentialsId: 'github-token', url: 'https://github.com/soumithrajkovuri/kind-deployment-cicd'
             }
         }
 
-        stage('Push') {
+        stage('Build Docker Image') {
             steps {
-                sh 'kind load docker-image myapp:$BUILD_NUMBER --name jenkins-kind'
+                sh '''
+                    docker build -t ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} .
+                '''
             }
         }
 
-        stage('Deploy') {
+        stage('Push Docker Image') {
             steps {
-                ansiblePlaybook(
-                    playbook: 'ansible/playbook-deploy.yaml',
-                    extras: "-e image_tag=$BUILD_NUMBER"
-                )
+                sh '''
+                    docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                '''
             }
         }
+
+        stage('Deploy via Ansible') {
+            steps {
+                sh """
+                    ansible-playbook ansible/playbook-deploy.yaml -e image_tag=${IMAGE_TAG}
+                """
+            }
+    }
+
+    post {
+        success { echo "Deployment successful!" }
+        failure { echo "Build failed!" }
     }
 }
