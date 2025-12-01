@@ -41,7 +41,7 @@ pipeline {
         stage('Deploy via Ansible') {
             steps {
                 sh """
-                    ansible ansible/playbook-deploy.yaml -e image_tag=${IMAGE_TAG}
+                    ansible-playbook ansible/playbook-deploy.yaml -e image_tag=${IMAGE_TAG}
                 """
             }
         }
