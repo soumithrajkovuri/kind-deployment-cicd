@@ -6,6 +6,7 @@ pipeline {
     }
 
     environment {
+        PATH = "/usr/bin:/usr/local/bin:${env.PATH}"
         REGISTRY = "localhost:5000"
         IMAGE_NAME = "myapp"
         IMAGE_TAG = "v${BUILD_NUMBER}"
