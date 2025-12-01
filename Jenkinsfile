@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout true     
+    }
+
     environment {
         REGISTRY = "localhost:5000"
         IMAGE_NAME = "myapp"
