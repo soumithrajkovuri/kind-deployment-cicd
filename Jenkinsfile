@@ -13,15 +13,6 @@ pipeline {
         CHART_PATH = "helm/myapp"
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main',
-                    credentialsId: 'github-secret',     // use the correct ID
-                    url: 'https://github.com/soumithrajkovuri/kind-deployment-cicd'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 sh '''
