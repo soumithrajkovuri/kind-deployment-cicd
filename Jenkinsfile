@@ -16,7 +16,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: 'github-secret', url: 'https://github.com/soumithrajkovuri/kind-deployment-cicd'
+                git branch: 'main',
+                    credentialsId: 'github-secret',     // use the correct ID
+                    url: 'https://github.com/soumithrajkovuri/kind-deployment-cicd'
             }
         }
 
