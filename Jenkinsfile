@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     options {
-        skipDefaultCheckout true     
+        skipDefaultCheckout true
     }
 
     environment {
@@ -13,19 +13,27 @@ pipeline {
         CHART_PATH = "helm/myapp"
     }
 
+    stages {
+
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
-                sh '''
+                sh """
                     docker build -t ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} ./app
-                '''
+                """
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                sh '''
+                sh """
                     docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
-                '''
+                """
             }
         }
 
@@ -36,6 +44,7 @@ pipeline {
                 """
             }
         }
+
     }
 
     post {
@@ -43,4 +52,3 @@ pipeline {
         failure { echo "Build failed!" }
     }
 }
-
