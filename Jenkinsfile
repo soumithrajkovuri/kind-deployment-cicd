@@ -38,6 +38,7 @@ pipeline {
                     ansible-playbook ansible/playbook-deploy.yaml -e image_tag=${IMAGE_TAG}
                 """
             }
+        }
     }
 
     post {
@@ -45,3 +46,4 @@ pipeline {
         failure { echo "Build failed!" }
     }
 }
+
