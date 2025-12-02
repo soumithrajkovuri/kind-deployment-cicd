@@ -25,7 +25,8 @@ pipeline {
                         credentialsId: 'github-secret'
                     ]]
                 ])
-                sh 'ls -R'
+
+                sh "ls -R"
             }
         }
 
@@ -52,10 +53,14 @@ pipeline {
                         -v ${WORKSPACE}:/work \
                         -v /root/.kube:/root/.kube \
                         -w /work \
-                        python:3.11-slim /bin/sh -c "pip install --no-cache-dir ansible && python -m ansible.cli.playbook ansible/playbook-deploy.yaml -e image_tag=${IMAGE_TAG}"
+                        python:3.11-slim /bin/sh -c \"
+                        pip install --no-cache-dir ansible && \
+                        python -m ansible.cli.playbook ansible/playbook-deploy.yaml -e image_tag=${IMAGE_TAG}
+                        \"
                 """
             }
         }
+
     }
 
     post {
