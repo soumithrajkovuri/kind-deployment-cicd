@@ -41,7 +41,7 @@ pipeline {
         stage('Deploy via Ansible') {
             steps {
                 sh """
-                    python3 -m ansible.cli.playbook ansible/playbook-deploy.yaml -e image_tag=${IMAGE_TAG}
+                    /usr/bin/python3 -m ansible.cli.playbook ansible/playbook-deploy.yaml -e image_tag=${IMAGE_TAG}
                 """
             }
         }
