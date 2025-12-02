@@ -16,9 +16,16 @@ pipeline {
 
     stages {
 
-        stage('Checkout SCM') {
+        stage('Checkout') {
             steps {
-                checkout scm
+                checkout([$class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/soumithrajkovuri/kind-deployment-cicd',
+                        credentialsId: 'github-secret'
+                    ]]
+                ])
+                sh 'ls -R'
             }
         }
 
@@ -40,13 +47,13 @@ pipeline {
 
         stage('Deploy via Ansible (container)') {
             steps {
-                sh '''
+                sh """
                     docker run --rm \
                         -v ${WORKSPACE}:/work \
                         -v /root/.kube:/root/.kube \
                         -w /work \
-                        python:3.11-slim /bin/sh -c "pip install --no-cache-dir ansible && python -m ansible.cli.playbook ansible/playbook-deploy.yaml -e image_tag=''' + "${IMAGE_TAG}" + '''"
-                '''
+                        python:3.11-slim /bin/sh -c "pip install --no-cache-dir ansible && python -m ansible.cli.playbook infra/ansible/playbook-deploy.yaml -e image_tag=${IMAGE_TAG}"
+                """
             }
         }
     }
