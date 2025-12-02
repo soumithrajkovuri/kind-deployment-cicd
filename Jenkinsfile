@@ -6,26 +6,17 @@ pipeline {
     }
 
     environment {
-        PATH = "/usr/bin:/usr/local/bin:${env.PATH}"
-        REGISTRY = "localhost:5000"
-        IMAGE_NAME = "myapp"
-        IMAGE_TAG = "v${BUILD_NUMBER}"
-        RELEASE_NAME = "myapp"
-        CHART_PATH = "helm/myapp"
+        PATH          = "/usr/bin:/usr/local/bin:${env.PATH}"
+        REGISTRY      = "localhost:5000"
+        IMAGE_NAME    = "myapp"
+        IMAGE_TAG     = "v${BUILD_NUMBER}"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[
-                        url: 'https://github.com/soumithrajkovuri/kind-deployment-cicd',
-                        credentialsId: 'github-secret'
-                    ]]
-                ])
-
+                checkout(scm)
                 sh "ls -R"
             }
         }
@@ -53,18 +44,17 @@ pipeline {
                         -v ${WORKSPACE}:/work \
                         -v /root/.kube:/root/.kube \
                         -w /work \
-                        python:3.11-slim /bin/sh -c \"
-                        pip install --no-cache-dir ansible && \
-                        python -m ansible.cli.playbook ansible/playbook-deploy.yaml -e image_tag=${IMAGE_TAG}
-                        \"
+                        python:3.11-slim /bin/bash -c '
+                            pip install ansible &&
+                            ansible-playbook ansible/playbook-deploy.yaml -e image_tag=${IMAGE_TAG}
+                        '
                 """
             }
         }
-
     }
 
     post {
         success { echo "Deployment successful!" }
-        failure { echo "Build failed!" }
+        failure { echo "Deployment failed!" }
     }
 }
