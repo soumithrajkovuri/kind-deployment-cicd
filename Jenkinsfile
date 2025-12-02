@@ -38,14 +38,17 @@ pipeline {
             }
         }
 
-        stage('Deploy via Ansible') {
+        stage('Deploy via Ansible (container)') {
             steps {
-                sh """
-                    /usr/bin/python3 -m ansible.cli.playbook ansible/playbook-deploy.yaml -e image_tag=${IMAGE_TAG}
-                """
+                sh '''
+                    docker run --rm \
+                        -v ${WORKSPACE}:/work \
+                        -v /root/.kube:/root/.kube \
+                        -w /work \
+                        python:3.11-slim /bin/sh -c "pip install --no-cache-dir ansible && python -m ansible.cli.playbook ansible/playbook-deploy.yaml -e image_tag=''' + "${IMAGE_TAG}" + '''"
+                '''
             }
         }
-
     }
 
     post {
