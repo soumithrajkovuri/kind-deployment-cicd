@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "myapp.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .values.replicaCount }}
   selector:
     matchLabels:
       app: {{ include "myapp.name" . }}
@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
         - name: {{ include "myapp.name" . }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .values.image.repository }}:{{ .values.image.tag }}"
           ports:
             - containerPort: 80
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .values.resources | nindent 12 }}

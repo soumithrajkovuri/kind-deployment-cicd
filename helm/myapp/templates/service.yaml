@@ -5,9 +5,9 @@ metadata:
   labels:
     {{- include "myapp.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .values.service.type }}
   ports:
-    - port: {{ .Values.service.port }}
+    - port: {{ .values.service.port }}
       targetPort: 80
   selector:
     app: {{ include "myapp.name" . }}

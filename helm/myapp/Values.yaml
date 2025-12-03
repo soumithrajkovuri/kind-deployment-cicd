@@ -1,8 +1,8 @@
 replicaCount: 2
 
 image:
-  repository: "localhost:5000/myapp"
-  tag: v8
+  repository: "soumith30/myapp"
+  tag: v7
   pullPolicy: IfNotPresent
 
 service:
