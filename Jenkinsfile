@@ -10,7 +10,7 @@ pipeline {
     }
 
     stages {
-        
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -28,8 +28,11 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: DOCKERHUB_CRED,
-                        usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: DOCKERHUB_CRED,
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
+                )]) {
                     sh """
                         echo "$PASS" | docker login -u "$USER" --password-stdin
                         docker push ${IMAGE}:${TAG}
@@ -40,6 +43,8 @@ pipeline {
 
         stage('Update Image Tag in Git (GitOps)') {
             steps {
+
+                // Update tag inside values.yaml
                 sh """
                     sed -i 's/tag:.*/tag: ${TAG}/' ${VALUES_FILE}
 
@@ -47,12 +52,17 @@ pipeline {
                     git config user.email "jenkins@ci"
 
                     git add ${VALUES_FILE}
-                    git commit -m "Update image tag to ${TAG}"
+                    git commit -m "Update image tag to ${TAG}" || echo "No changes to commit"
                 """
 
-                sshagent(credentials: ['github-secret']) {
+                // Push commit using HTTPS + Git credentials
+                withCredentials([usernamePassword(
+                    credentialsId: GITHUB_CRED,
+                    usernameVariable: 'USER',
+                    passwordVariable: 'TOKEN'
+                )]) {
                     sh """
-                        git push origin main
+                        git push https://${USER}:${TOKEN}@github.com/soumithrajkovuri/kind-deployment-cicd.git HEAD:main
                     """
                 }
             }
@@ -60,6 +70,6 @@ pipeline {
     }
 
     post {
-        success { echo "CI done — ArgoCD will deploy automatically." }
+        success { echo "CI completed — ArgoCD will auto-sync." }
     }
 }
