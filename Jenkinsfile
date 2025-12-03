@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CRED = 'dockerhub-cred'      // username/password for Docker Hub
+        DOCKERHUB_CRED = 'Docker-cred'      // username/password for Docker Hub
         GITHUB_CRED    = 'git-password'        // PAT token credential for Git push
         IMAGE          = "soumith30/myapp"
         TAG            = "v${BUILD_NUMBER}"
