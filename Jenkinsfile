@@ -6,7 +6,7 @@ pipeline {
         GITHUB_CRED = 'git-password'
         IMAGE = "soumith30/myapp"
         TAG = "v${BUILD_NUMBER}"
-        VALUES_FILE = "helm/myapp/values.yaml"
+        VALUES_FILE = "helm/myapp/Values.yaml"
     }
 
     stages {
