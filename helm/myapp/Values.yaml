@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: "localhost:5000/myapp"
-  tag: v7
+  tag: v8
   pullPolicy: IfNotPresent
 
 service:
