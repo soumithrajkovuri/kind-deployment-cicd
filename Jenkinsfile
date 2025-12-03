@@ -2,16 +2,16 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CRED = 'Docker-cred'
-        GITHUB_CRED = 'git-password'
-        IMAGE = "soumith30/myapp"
-        TAG = "v${BUILD_NUMBER}"
-        VALUES_FILE = "helm/myapp/Values.yaml"
+        DOCKERHUB_CRED = 'dockerhub-cred'      // username/password for Docker Hub
+        GITHUB_CRED    = 'git-password'        // PAT token credential for Git push
+        IMAGE          = "soumith30/myapp"
+        TAG            = "v${BUILD_NUMBER}"
+        VALUES_FILE    = "helm/myapp/Values.yaml"
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
                 checkout scm
                 sh "ls -R"
@@ -34,7 +34,7 @@ pipeline {
                     passwordVariable: 'PASS'
                 )]) {
                     sh """
-                        echo "$PASS" | docker login -u "$USER" --password-stdin
+                        echo "${PASS}" | docker login -u "${USER}" --password-stdin
                         docker push ${IMAGE}:${TAG}
                     """
                 }
@@ -43,8 +43,7 @@ pipeline {
 
         stage('Update Image Tag in Git (GitOps)') {
             steps {
-
-                // Update tag inside values.yaml
+                // modify values.yaml
                 sh """
                     sed -i 's/tag:.*/tag: ${TAG}/' ${VALUES_FILE}
 
@@ -52,17 +51,18 @@ pipeline {
                     git config user.email "jenkins@ci"
 
                     git add ${VALUES_FILE}
-                    git commit -m "Update image tag to ${TAG}" || echo "No changes to commit"
+                    git commit -m "Update image tag to ${TAG}"
                 """
 
-                // Push commit using HTTPS + Git credentials
+                // push commit to GitHub using PAT
                 withCredentials([usernamePassword(
                     credentialsId: GITHUB_CRED,
                     usernameVariable: 'USER',
                     passwordVariable: 'TOKEN'
                 )]) {
                     sh """
-                        git push https://${USER}:${TOKEN}@github.com/soumithrajkovuri/kind-deployment-cicd.git HEAD:main
+                        git remote set-url origin https://${USER}:${TOKEN}@github.com/soumithrajkovuri/kind-deployment-cicd.git
+                        git push origin HEAD:main
                     """
                 }
             }
@@ -70,6 +70,11 @@ pipeline {
     }
 
     post {
-        success { echo "CI completed — ArgoCD will auto-sync." }
+        success {
+            echo "CI pipeline completed — ArgoCD will deploy automatically!"
+        }
+        failure {
+            echo "Pipeline failed!"
+        }
     }
 }
