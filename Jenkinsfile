@@ -1,7 +1,15 @@
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout true
+    }
+
     environment {
+        PATH          = "/usr/bin:/usr/local/bin:${env.PATH}"
+        REGISTRY      = "localhost:5000"
+        IMAGE_NAME    = "myapp"
+        IMAGE_TAG     = "v${BUILD_NUMBER}"
         DOCKERHUB_CRED = 'Docker-cred'
         GITHUB_CRED = 'git-password'
         IMAGE = "soumith30/myapp"
@@ -10,9 +18,12 @@ pipeline {
     }
 
     stages {
+
         
         stage('Checkout') {
             steps {
+                checkout(scm)
+                sh "ls -R"
                 checkout scm
                 sh "ls -R"
             }
@@ -21,6 +32,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh """
+                    docker build -t ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} ./app
+                """
+                sh """
                     docker build -t ${IMAGE}:${TAG} ./app
                 """
             }
@@ -28,6 +42,10 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
+                sh """
+                    docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                """
+            }
                 withCredentials([usernamePassword(credentialsId: DOCKERHUB_CRED,
                         usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                     sh """
@@ -38,9 +56,19 @@ pipeline {
             }
         }
 
+        stage('Deploy via Ansible (container)') {
         stage('Update Image Tag in Git (GitOps)') {
             steps {
                 sh """
+                    docker run --rm \
+                        -v ${WORKSPACE}:/work \
+                        -v /root/.kube:/root/.kube \
+                        -w /work \
+                        python:3.11-slim /bin/bash -c '
+                            pip install ansible &&
+                            ansible-playbook ansible/playbook-deploy.yaml -e image_tag=${IMAGE_TAG}
+                        '
+                """
                     sed -i 's/tag:.*/tag: ${TAG}/' ${VALUES_FILE}
 
                     git config user.name "jenkins"
@@ -60,6 +88,8 @@ pipeline {
     }
 
     post {
+        success { echo "Deployment successful!" }
+        failure { echo "Deployment failed!" }
         success { echo "CI done — ArgoCD will deploy automatically." }
     }
 }
